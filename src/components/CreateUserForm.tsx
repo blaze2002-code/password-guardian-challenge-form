@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import PasswordCriteria from "@/components/PasswordCriteria";
 import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
@@ -19,6 +19,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
   const [apiError, setApiError] = useState<string | null>(null);
   const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
+  
+  // Refs for focus management
+  const usernameInputRef = useRef<HTMLInputElement>(null);
+  const passwordInputRef = useRef<HTMLInputElement>(null);
+  const errorAlertRef = useRef<HTMLDivElement>(null);
 
   // Challenge token from URL
   const getChallengeToken = () => {
@@ -43,6 +48,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
   // Get criteria that are not met
   const failedCriteria = passwordCriteria.filter((criteria) => !criteria.test(password));
 
+  // Shift focus to the error alert when it appears
+  useEffect(() => {
+    if (apiError && errorAlertRef.current) {
+      errorAlertRef.current.focus();
+    }
+  }, [apiError]);
+
   // Handle form submission
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,10 +65,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
     // Form validation
     if (!username.trim()) {
       setApiError("Username is required");
+      usernameInputRef.current?.focus();
       return;
     }
 
     if (!isPasswordValid) {
+      passwordInputRef.current?.focus();
       return; // Don't submit if password is invalid
     }
 
@@ -113,13 +127,26 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
     setShowPassword(!showPassword);
   };
 
+  // Keyboard handling for password visibility toggle
+  const handleToggleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      togglePasswordVisibility();
+    }
+  };
+
   return (
     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md animate-fade-in">
       <div className="bg-white py-8 px-6 shadow-lg sm:rounded-xl border border-gray-100">
-        <form className="space-y-6" onSubmit={handleSubmit}>
+        <form className="space-y-6" onSubmit={handleSubmit} noValidate>
           {apiError && (
-            <Alert variant="destructive" className="animate-scale-in border-red-200 bg-red-50">
-              <AlertTriangle className="h-4 w-4" />
+            <Alert 
+              variant="destructive" 
+              className="animate-scale-in border-red-200 bg-red-50"
+              ref={errorAlertRef}
+              tabIndex={-1}
+            >
+              <AlertTriangle className="h-4 w-4" aria-hidden="true" />
               <AlertTitle className="sr-only">Error</AlertTitle>
               <AlertDescription className="text-sm text-red-700 font-medium">{apiError}</AlertDescription>
             </Alert>
@@ -133,6 +160,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
               id="username"
               name="username"
               type="text"
+              ref={usernameInputRef}
               required
               value={username}
               onChange={(e) => setUsername(e.target.value)}
@@ -141,7 +169,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
               aria-describedby={!username.trim() ? "username-error" : undefined}
             />
             {!username.trim() && (
-              <p id="username-error" className="mt-1 text-sm text-red-600">Username is required</p>
+              <p id="username-error" className="mt-1 text-sm text-red-600" role="alert">Username is required</p>
             )}
           </div>
 
@@ -154,27 +182,30 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
+                ref={passwordInputRef}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-gray-50 border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all duration-200 pr-10"
                 aria-invalid={password.length > 0 && !isPasswordValid}
-                aria-describedby={failedCriteria.length > 0 ? "password-criteria" : undefined}
+                aria-describedby="password-criteria"
               />
               <button
                 type="button"
                 onClick={togglePasswordVisibility}
+                onKeyDown={handleToggleKeyDown}
                 className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
                 aria-label={showPassword ? "Hide password" : "Show password"}
+                tabIndex={0}
               >
-                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                {showPassword ? <EyeOff className="h-4 w-4" aria-hidden="true" /> : <Eye className="h-4 w-4" aria-hidden="true" />}
               </button>
             </div>
             
             {password.length > 0 && (
-              <div id="password-criteria" className="mt-2 p-3 bg-amber-50 rounded-md border border-amber-100 animate-fade-in">
+              <div className="mt-2 p-3 bg-amber-50 rounded-md border border-amber-100 animate-fade-in">
                 <PasswordCriteria 
-                  criteria={failedCriteria} 
+                  criteria={passwordCriteria} 
                   password={password}
                 />
               </div>
@@ -195,7 +226,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
               {isSubmitting ? "Creating..." : (
                 <>
                   Create User
-                  {isPasswordValid && username.trim() && <Check className="ml-2 h-4 w-4" />}
+                  {isPasswordValid && username.trim() && <Check className="ml-2 h-4 w-4" aria-hidden="true" />}
                 </>
               )}
             </Button>

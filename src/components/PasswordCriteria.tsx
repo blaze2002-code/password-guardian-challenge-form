@@ -19,7 +19,12 @@ const PasswordCriteria: React.FC<PasswordCriteriaProps> = ({ criteria, password 
   }
 
   return (
-    <div className="text-sm" role="alert" aria-live="polite">
+    <div 
+      className="text-sm" 
+      role="alert" 
+      aria-live="polite"
+      id="password-criteria"
+    >
       <h3 className="font-medium mb-1.5 flex items-center">
         <AlertCircle className="h-4 w-4 mr-1.5 text-amber-700" /> 
         Password Requirements
@@ -31,11 +36,12 @@ const PasswordCriteria: React.FC<PasswordCriteriaProps> = ({ criteria, password 
             <li 
               key={criterion.id} 
               className={`flex items-center ${isMet ? "text-green-600" : "text-amber-800"}`}
+              id={`criterion-${criterion.id}`}
             >
               {isMet ? (
-                <CheckCircle className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                <CheckCircle className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" aria-hidden="true" />
               ) : (
-                <X className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" />
+                <X className="h-3.5 w-3.5 mr-1.5 flex-shrink-0" aria-hidden="true" />
               )}
               <span>{criterion.message}</span>
             </li>
