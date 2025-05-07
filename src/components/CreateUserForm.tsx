@@ -5,7 +5,8 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff, Check } from "lucide-react";
+import { Eye, EyeOff, Check, AlertTriangle } from "lucide-react";
+import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
 
 interface CreateUserFormProps {
   onSuccess: () => void;
@@ -39,7 +40,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
   // Check if password is valid
   const isPasswordValid = passwordCriteria.every((criteria) => criteria.test(password));
 
-  // Filter criteria that are not met
+  // Get criteria that are not met
   const failedCriteria = passwordCriteria.filter((criteria) => !criteria.test(password));
 
   // Handle form submission
@@ -75,7 +76,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
         })
       });
 
-      // Handle different response statuses
+      // Handle different response statuses with exact error messages as required
       if (response.ok) {
         toast({
           title: "Success",
@@ -84,13 +85,13 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
         });
         onSuccess();
       } else if (response.status === 400) {
-        // Specific error for common passwords
+        // Specific error for common passwords - using exact wording
         setApiError("Sorry, the entered password is not allowed, please try a different one.");
       } else if (response.status === 401 || response.status === 403) {
-        // Authentication error
+        // Authentication error - using exact wording
         setApiError("Not authenticated to access this resource.");
       } else {
-        // Generic error
+        // Generic error - using exact wording
         setApiError("Something went wrong, please try again.");
       }
     } catch (error) {
@@ -117,9 +118,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
       <div className="bg-white py-8 px-6 shadow-lg sm:rounded-xl border border-gray-100">
         <form className="space-y-6" onSubmit={handleSubmit}>
           {apiError && (
-            <div className="rounded-md bg-red-50 p-4 border border-red-100 animate-scale-in">
-              <div className="text-sm text-red-700 font-medium">{apiError}</div>
-            </div>
+            <Alert variant="destructive" className="animate-scale-in border-red-200 bg-red-50">
+              <AlertTriangle className="h-4 w-4" />
+              <AlertTitle className="sr-only">Error</AlertTitle>
+              <AlertDescription className="text-sm text-red-700 font-medium">{apiError}</AlertDescription>
+            </Alert>
           )}
           
           <div className="space-y-2">
@@ -171,7 +174,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
             {password.length > 0 && (
               <div id="password-criteria" className="mt-2 p-3 bg-amber-50 rounded-md border border-amber-100 animate-fade-in">
                 <PasswordCriteria 
-                  criteria={failedCriteria.length > 0 ? failedCriteria : passwordCriteria.filter(c => c.test(password))} 
+                  criteria={failedCriteria} 
                   password={password}
                 />
               </div>
@@ -187,6 +190,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
                   ? "bg-indigo-300 cursor-not-allowed"
                   : "bg-indigo-600 hover:bg-indigo-700"
               } text-white font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center`}
+              aria-disabled={isSubmitting || !username.trim() || !isPasswordValid}
             >
               {isSubmitting ? "Creating..." : (
                 <>
