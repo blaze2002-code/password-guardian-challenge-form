@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Eye, EyeOff } from "lucide-react";
+import { Eye, EyeOff, Check } from "lucide-react";
 
 interface CreateUserFormProps {
   onSuccess: () => void;
@@ -77,6 +77,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
 
       // Handle different response statuses
       if (response.ok) {
+        toast({
+          title: "Success",
+          description: "User created successfully!",
+          duration: 3000,
+        });
         onSuccess();
       } else if (response.status === 400) {
         // Specific error for common passwords
@@ -130,7 +135,11 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
               onChange={(e) => setUsername(e.target.value)}
               className="bg-gray-50 border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all duration-200"
               aria-invalid={!username.trim()}
+              aria-describedby={!username.trim() ? "username-error" : undefined}
             />
+            {!username.trim() && (
+              <p id="username-error" className="mt-1 text-sm text-red-600">Username is required</p>
+            )}
           </div>
 
           <div className="space-y-2">
@@ -147,6 +156,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-gray-50 border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all duration-200 pr-10"
                 aria-invalid={password.length > 0 && !isPasswordValid}
+                aria-describedby={failedCriteria.length > 0 ? "password-criteria" : undefined}
               />
               <button
                 type="button"
@@ -158,9 +168,12 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
               </button>
             </div>
             
-            {password.length > 0 && failedCriteria.length > 0 && (
-              <div className="mt-2 p-3 bg-amber-50 rounded-md border border-amber-100 animate-fade-in">
-                <PasswordCriteria criteria={failedCriteria} />
+            {password.length > 0 && (
+              <div id="password-criteria" className="mt-2 p-3 bg-amber-50 rounded-md border border-amber-100 animate-fade-in">
+                <PasswordCriteria 
+                  criteria={failedCriteria.length > 0 ? failedCriteria : passwordCriteria.filter(c => c.test(password))} 
+                  password={password}
+                />
               </div>
             )}
           </div>
@@ -169,9 +182,18 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
             <Button
               type="submit"
               disabled={isSubmitting || !username.trim() || !isPasswordValid}
-              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:bg-indigo-300 disabled:cursor-not-allowed"
+              className={`w-full py-2.5 ${
+                isSubmitting || !username.trim() || !isPasswordValid
+                  ? "bg-indigo-300 cursor-not-allowed"
+                  : "bg-indigo-600 hover:bg-indigo-700"
+              } text-white font-medium transition-all duration-200 shadow-sm hover:shadow-md flex items-center justify-center`}
             >
-              {isSubmitting ? "Creating..." : "Create User"}
+              {isSubmitting ? "Creating..." : (
+                <>
+                  Create User
+                  {isPasswordValid && username.trim() && <Check className="ml-2 h-4 w-4" />}
+                </>
+              )}
             </Button>
           </div>
         </form>
