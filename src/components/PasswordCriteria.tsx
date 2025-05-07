@@ -1,5 +1,6 @@
 
 import React from "react";
+import { AlertCircle } from "lucide-react";
 
 interface Criterion {
   id: string;
@@ -17,10 +18,16 @@ const PasswordCriteria: React.FC<PasswordCriteriaProps> = ({ criteria }) => {
   }
 
   return (
-    <div className="mt-2">
-      <ul className="list-disc pl-5 text-sm text-red-600" role="alert">
+    <div className="text-sm text-amber-700" role="alert">
+      <h3 className="font-medium mb-1.5 flex items-center">
+        <AlertCircle className="h-4 w-4 mr-1.5" /> 
+        Password Requirements
+      </h3>
+      <ul className="list-disc pl-5 space-y-1">
         {criteria.map((criterion) => (
-          <li key={criterion.id}>{criterion.message}</li>
+          <li key={criterion.id} className="text-amber-800">
+            {criterion.message}
+          </li>
         ))}
       </ul>
     </div>

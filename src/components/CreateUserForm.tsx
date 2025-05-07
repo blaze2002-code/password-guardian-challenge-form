@@ -2,6 +2,10 @@
 import React, { useState, useEffect } from "react";
 import PasswordCriteria from "@/components/PasswordCriteria";
 import { useToast } from "@/hooks/use-toast";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Eye, EyeOff } from "lucide-react";
 
 interface CreateUserFormProps {
   onSuccess: () => void;
@@ -12,6 +16,7 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [apiError, setApiError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
   const { toast } = useToast();
 
   // Challenge token from URL
@@ -98,64 +103,76 @@ const CreateUserForm: React.FC<CreateUserFormProps> = ({ onSuccess }) => {
     }
   }, [username, password]);
 
+  const togglePasswordVisibility = () => {
+    setShowPassword(!showPassword);
+  };
+
   return (
-    <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-      <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+    <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md animate-fade-in">
+      <div className="bg-white py-8 px-6 shadow-lg sm:rounded-xl border border-gray-100">
         <form className="space-y-6" onSubmit={handleSubmit}>
           {apiError && (
-            <div className="rounded-md bg-red-50 p-4">
-              <div className="text-sm text-red-700">{apiError}</div>
+            <div className="rounded-md bg-red-50 p-4 border border-red-100 animate-scale-in">
+              <div className="text-sm text-red-700 font-medium">{apiError}</div>
             </div>
           )}
           
-          <div>
-            <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+          <div className="space-y-2">
+            <Label htmlFor="username" className="text-gray-700">
               Username
-            </label>
-            <div className="mt-1">
-              <input
-                id="username"
-                name="username"
-                type="text"
-                required
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                aria-invalid={!username.trim()}
-              />
-            </div>
+            </Label>
+            <Input
+              id="username"
+              name="username"
+              type="text"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              className="bg-gray-50 border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all duration-200"
+              aria-invalid={!username.trim()}
+            />
           </div>
 
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-gray-700">
               Password
-            </label>
-            <div className="mt-1">
-              <input
+            </Label>
+            <div className="relative">
+              <Input
                 id="password"
                 name="password"
-                type="password"
+                type={showPassword ? "text" : "password"}
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                className="bg-gray-50 border-gray-200 focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50 transition-all duration-200 pr-10"
                 aria-invalid={password.length > 0 && !isPasswordValid}
               />
+              <button
+                type="button"
+                onClick={togglePasswordVisibility}
+                className="absolute inset-y-0 right-0 flex items-center px-3 text-gray-400 hover:text-gray-600 transition-colors"
+                aria-label={showPassword ? "Hide password" : "Show password"}
+              >
+                {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+              </button>
             </div>
             
             {password.length > 0 && failedCriteria.length > 0 && (
-              <PasswordCriteria criteria={failedCriteria} />
+              <div className="mt-2 p-3 bg-amber-50 rounded-md border border-amber-100 animate-fade-in">
+                <PasswordCriteria criteria={failedCriteria} />
+              </div>
             )}
           </div>
 
           <div>
-            <button
+            <Button
               type="submit"
               disabled={isSubmitting || !username.trim() || !isPasswordValid}
-              className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:bg-indigo-300"
+              className="w-full py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium transition-all duration-200 shadow-sm hover:shadow-md disabled:bg-indigo-300 disabled:cursor-not-allowed"
             >
               {isSubmitting ? "Creating..." : "Create User"}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
